@@ -1,0 +1,3 @@
+[submodule "FbxSharp"]
+	path = FbxSharp
+	url = https://github.com/izrik/FbxSharp.git
