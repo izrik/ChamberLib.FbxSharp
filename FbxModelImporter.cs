@@ -42,7 +42,34 @@ namespace ChamberLib.FbxSharp
 
             var model = new ModelContent();
             model.Filename = filename;
+
+            var bonesByNode = new Dictionary<Node, BoneContent>();
+            foreach (var node in scene.Nodes)
+            {
+                var bone = BoneFromNode(node);
+                bonesByNode[node]=bone;
+                model.Bones.Add(bone);
+            }
+            foreach (var node in scene.Nodes)
+            {
+                var bone = bonesByNode[node];
+                int i;
+                int n = node.GetChildCount();
+                for (i = 0; i < n; i++)
+                {
+                    bone.ChildBoneIndexes.Add(scene.Nodes.IndexOf(node.GetChild(i)));
+                }
+            }
+
             return model;
+        }
+
+        static BoneContent BoneFromNode(Node node)
+        {
+            var bone = new BoneContent();
+            bone.Name = node.Name;
+
+            return bone;
         }
     }
 }
