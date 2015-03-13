@@ -40,6 +40,11 @@ namespace ChamberLib.FbxSharp
 
 
 
+            var material = new MaterialContent();
+            material.Shader = importer.ImportShader("$skinned", importer);
+            material.Alpha = 1;
+            material.DiffuseColor = new Vector3(0.5f, 0.5f, 0.5f);
+
             var model = new ModelContent();
             model.Filename = filename;
 
@@ -49,6 +54,39 @@ namespace ChamberLib.FbxSharp
                 var bone = BoneFromNode(node);
                 bonesByNode[node]=bone;
                 model.Bones.Add(bone);
+
+                if (node.GetNodeAttributeCount() > 0 &&
+                    node.GetNodeAttributeByIndex(0) is Mesh)
+                {
+                    var mesh = (Mesh)node.GetNodeAttributeByIndex(0);
+                    var mesh2 = new MeshContent();
+                    model.Meshes.Add(mesh2);
+                    var part = new PartContent();
+                    mesh2.Parts.Add(part);
+                    part.Vertexes = new VertexBufferContent();
+                    part.Vertexes.Vertices =
+                        mesh.GetControlPoints()
+                            .Select(v => new Vertex_PBiBwNT(){
+                                Position = v.ToChamber().ToVectorXYZ(),
+                                Normal = Vector3.UnitY,
+                            })
+                            .Cast<IVertex>()
+                            .ToArray();
+                    model.VertexBuffers.Add(part.Vertexes);
+                    part.NumVertexes = part.Vertexes.Vertices.Length;
+                    part.Indexes = new IndexBufferContent();
+                    part.Indexes.Indexes =
+                        mesh.PolygonIndexes
+                            .SelectMany(p => {
+                                if (p.Count != 3) throw new InvalidOperationException();
+                                return p;
+                            })
+                            .Select(i => (short)i)
+                            .ToArray();
+                    model.IndexBuffers.Add(part.Indexes);
+                    part.PrimitiveCount = part.Indexes.Indexes.Length / 3;
+                    part.Material = material;
+                }
             }
             foreach (var node in scene.Nodes)
             {
