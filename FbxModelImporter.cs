@@ -69,6 +69,41 @@ namespace ChamberLib.FbxSharp
             var bone = new BoneContent();
             bone.Name = node.Name;
 
+            var translation =
+                (node.TranslationActive.Get() ?
+                    node.LclTranslation.Get().ToChamber() :
+                    Vector3.Zero);
+            var scaling =
+                (node.ScalingActive.Get() ?
+                    node.LclScaling.Get().ToChamber() :
+                    Vector3.One);
+            var rotationEuler =
+                (node.RotationActive.Get() ?
+                    node.LclRotation.Get().ToChamber() :
+                    Vector3.Zero);
+
+            var order = node.RotationOrder.Get();
+
+            var mt = Matrix.CreateTranslation(translation);
+            var mrx = Matrix.CreateRotationX(rotationEuler.X.ToRadians());
+            var mry = Matrix.CreateRotationY(rotationEuler.Y.ToRadians());
+            var mrz = Matrix.CreateRotationZ(rotationEuler.Z.ToRadians());
+            var ms = Matrix.CreateScale(scaling);
+
+            Matrix mr;
+            switch (order)
+            {
+            case Node.ERotationOrder.OrderXYZ:
+                mr = mrx * mry * mrz;
+                break;
+            default:
+                throw new NotImplementedException();
+            }
+
+            bone.Transform = ms * mr * mt;
+
+            bone.InverseBindPose = Matrix.Identity;
+
             return bone;
         }
     }
