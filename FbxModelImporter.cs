@@ -99,6 +99,16 @@ namespace ChamberLib.FbxSharp
                 }
             }
 
+            if (scene.Poses.Count > 0)
+            {
+                var pose = scene.Poses[0];
+                foreach (var pi in pose.PoseInfos)
+                {
+                    var bone = bonesByNode[pi.Node];
+                    bone.InverseBindPose = pi.Matrix.ToChamber();
+                }
+            }
+
             return model;
         }
 
