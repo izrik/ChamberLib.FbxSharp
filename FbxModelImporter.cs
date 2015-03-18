@@ -86,6 +86,28 @@ namespace ChamberLib.FbxSharp
                     model.IndexBuffers.Add(part.Indexes);
                     part.PrimitiveCount = part.Indexes.Indexes.Length / 3;
                     part.Material = material;
+
+                    var layer = mesh.GetLayer(0);
+                    var normalElement = layer.GetNormals();
+                    var normals = normalElement.GetDirectArray().List;
+
+                    if (normalElement.MappingMode == LayerElement.EMappingMode.ByPolygonVertex)
+                    {
+                        if (normals.Count != part.Indexes.Indexes.Length)
+                            throw new InvalidOperationException();
+
+                        int i;
+                        for (i = 0; i < normals.Count; i++)
+                        {
+                            var n = normals[i].ToChamber().ToVectorXYZ();
+                            var index = part.Indexes.Indexes[i];
+                            part.Vertexes.Vertices[index].SetNormal(n);
+                        }
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
                 }
             }
             foreach (var node in scene.Nodes)
