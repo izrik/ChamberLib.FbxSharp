@@ -87,11 +87,13 @@ namespace ChamberLib.FbxSharp
                     part.PrimitiveCount = part.Indexes.Indexes.Length / 3;
                     part.Material = material;
 
+
                     var layer = mesh.GetLayer(0);
                     var normalElement = layer.GetNormals();
                     var normals = normalElement.GetDirectArray().List;
 
-                    if (normalElement.MappingMode == LayerElement.EMappingMode.ByPolygonVertex)
+                    if (normalElement.MappingMode == LayerElement.EMappingMode.ByPolygonVertex &&
+                        normalElement.ReferenceMode == LayerElement.EReferenceMode.Direct)
                     {
                         if (normals.Count != part.Indexes.Indexes.Length)
                             throw new InvalidOperationException();
@@ -102,6 +104,32 @@ namespace ChamberLib.FbxSharp
                             var n = normals[i].ToChamber().ToVectorXYZ();
                             var index = part.Indexes.Indexes[i];
                             part.Vertexes.Vertices[index].SetNormal(n);
+                        }
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+
+
+                    var uvElement = layer.GetUVs();
+                    var uvs = uvElement.GetDirectArray().List;
+                    var uvindexes = uvElement.GetIndexArray().List;
+
+                    if (uvElement.MappingMode == LayerElement.EMappingMode.ByPolygonVertex &&
+                        uvElement.ReferenceMode == LayerElement.EReferenceMode.IndexToDirect)
+                    {
+                        if (uvindexes.Count != part.Indexes.Indexes.Length)
+                            throw new InvalidOperationException();
+
+                        int i;
+                        for (i = 0; i < normals.Count; i++)
+                        {
+                            var uvindex = uvindexes[i];
+                            var index = part.Indexes.Indexes[i];
+                            var uv = uvs[uvindex].ToChamber();
+                            var uv2 = new Vector2(uv.X, 1-uv.Y);
+                            part.Vertexes.Vertices[index].SetTextureCoords(uv2);
                         }
                     }
                     else
