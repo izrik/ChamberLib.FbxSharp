@@ -40,10 +40,6 @@ namespace ChamberLib.FbxSharp
 
 
 
-            var material = new MaterialContent();
-            material.Shader = importer.ImportShader("$skinned", importer);
-            material.Alpha = 1;
-            material.DiffuseColor = new Vector3(0.5f, 0.5f, 0.5f);
 
             var model = new ModelContent();
             model.Filename = filename;
@@ -85,7 +81,6 @@ namespace ChamberLib.FbxSharp
                             .ToArray();
                     model.IndexBuffers.Add(part.Indexes);
                     part.PrimitiveCount = part.Indexes.Indexes.Length / 3;
-                    part.Material = material;
 
 
                     var layer = mesh.GetLayer(0);
@@ -131,6 +126,51 @@ namespace ChamberLib.FbxSharp
                             var uv2 = new Vector2(uv.X, 1-uv.Y);
                             part.Vertexes.Vertices[index].SetTextureCoords(uv2);
                         }
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+
+
+                    var matelem = layer.GetMaterials();
+                    var mats = matelem.GetDirectArray().List;
+                    var matindexes = matelem.GetIndexArray().List;
+
+                    if (matelem.MappingMode == LayerElement.EMappingMode.AllSame &&
+                        matelem.ReferenceMode == LayerElement.EReferenceMode.IndexToDirect)
+                    {
+                        var material = mats[0];
+                        var material2 = new MaterialContent();
+                        material2.Shader = importer.ImportShader("$skinned", importer);
+                        material2.Alpha = 1;
+                        material2.DiffuseColor = new Vector3(0.5f, 0.5f, 0.5f);
+                        material2.Name = material.Name;
+
+                        if (material is SurfaceLambert)
+                        {
+                            var lambert = material as SurfaceLambert;
+                            material2.DiffuseColor = lambert.Diffuse.Get().ToChamber();
+                            material2.EmissiveColor = lambert.Emissive.Get().ToChamber();
+                        }
+
+                        if (material is SurfacePhong)
+                        {
+                            var phong = material as SurfacePhong;
+
+                            var specularColor = phong.FindProperty("SpecularColor") as PropertyT<global::FbxSharp.Vector3>;
+                            if (specularColor != null)
+                                material2.SpecularColor = specularColor.Get().ToChamber();
+                            else
+                                material2.SpecularColor = phong.Specular.Get().ToChamber();
+
+                            var shininess = phong.FindProperty("Shininess") as PropertyT<double>;
+                            if (shininess != null)
+                                material2.SpecularPower = (float)shininess.Get();
+                            else
+                                material2.SpecularPower = (float)phong.SpecularFactor.Get();
+                        }
+                        part.Material = material2;
                     }
                     else
                     {
