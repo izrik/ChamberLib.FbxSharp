@@ -5,6 +5,8 @@ using FbxSharp;
 using System.Collections.Generic;
 using System.Linq;
 
+using _FbxSharp = global::FbxSharp;
+
 namespace ChamberLib.FbxSharp
 {
     public class FbxModelImporter
@@ -150,26 +152,44 @@ namespace ChamberLib.FbxSharp
                         if (material is SurfaceLambert)
                         {
                             var lambert = material as SurfaceLambert;
-                            material2.DiffuseColor = lambert.Diffuse.Get().ToChamber();
-                            material2.EmissiveColor = lambert.Emissive.Get().ToChamber();
+                            material2.DiffuseColor =
+                                ConvertMaterialColor(lambert, "Diffuse", lambert.Diffuse).ToChamber();
+                            material2.EmissiveColor =
+                                ConvertMaterialColor(lambert, "Emissive", lambert.Emissive).ToChamber();
+                        }
+                        else
+                        {
+                            material2.DiffuseColor =
+                                ConvertMaterialColor(material, "Diffuse").ToChamber();
+                            material2.EmissiveColor =
+                                ConvertMaterialColor(material, "Emissive").ToChamber();
                         }
 
                         if (material is SurfacePhong)
                         {
                             var phong = material as SurfacePhong;
 
-                            var specularColor = phong.FindProperty("SpecularColor") as PropertyT<global::FbxSharp.Vector3>;
-                            if (specularColor != null)
-                                material2.SpecularColor = specularColor.Get().ToChamber();
-                            else
-                                material2.SpecularColor = phong.Specular.Get().ToChamber();
+                            material2.SpecularColor =
+                                ConvertMaterialColor(phong, "Specular", phong.Specular).ToChamber();
 
-                            var shininess = phong.FindProperty("Shininess") as PropertyT<double>;
-                            if (shininess != null)
-                                material2.SpecularPower = (float)shininess.Get();
-                            else
-                                material2.SpecularPower = (float)phong.SpecularFactor.Get();
+                            var props =
+                                phong.FindProperties(
+                                    p => p.Name.ToLower() == "shininessexponent" ||
+                                         p.Name.ToLower() == "shininess");
+                            double shininess = 0;
+                            foreach (var prop in props)
+                            {
+                                if (prop.PropertyDataType == typeof(double))
+                                {
+                                    shininess = prop.Get<double>();
+                                    if (shininess > 0)
+                                        break;
+                                }
+                            }
+
+                            material2.SpecularPower = (float)shininess;
                         }
+
                         part.Material = material2;
                     }
                     else
@@ -200,6 +220,43 @@ namespace ChamberLib.FbxSharp
             }
 
             return model;
+        }
+
+        static _FbxSharp.Vector3 ConvertMaterialColor(SurfaceMaterial material, string name, Property include=null)
+        {
+            var name1 = name.ToLower();
+            var name2 = name1 + "color";
+            var props = material.FindProperties(
+                p => p.Name.ToLower() == name1/* ||
+                     p.Name.ToLower() == name2*/).ToList();
+
+            var v = new _FbxSharp.Vector3(0, 0, 0);
+            if (include != null && !props.Contains(include))
+            {
+                props.Add(include);
+            }
+
+            foreach (var p in props)
+            {
+                if (p.PropertyDataType == typeof(_FbxSharp.Vector3))
+                {
+                    v = (_FbxSharp.Vector3)p.GetValue();
+                    if (v != _FbxSharp.Vector3.Zero)
+                        return v;
+                }
+            }
+
+            foreach (var p in props)
+            {
+                if (p.PropertyDataType == typeof(_FbxSharp.Color))
+                {
+                    v = p.Get<_FbxSharp.Color>().ToVector3();
+                    if (v != _FbxSharp.Vector3.Zero)
+                        return v;
+                }
+            }
+
+            return _FbxSharp.Vector3.Zero;
         }
 
         static BoneContent BoneFromNode(Node node)
