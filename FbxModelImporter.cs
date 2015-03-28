@@ -75,11 +75,23 @@ namespace ChamberLib.FbxSharp
                     model.VertexBuffers.Add(part.Vertexes);
                     part.NumVertexes = part.Vertexes.Vertices.Length;
                     part.Indexes = new IndexBufferContent();
+                    var polygonVertexIndexes = mesh.PolygonIndexes.SelectMany(p => p).ToList();
                     part.Indexes.Indexes =
                         mesh.PolygonIndexes
                             .SelectMany(p => {
-                                if (p.Count != 3) throw new InvalidOperationException();
-                                return p;
+                                if (p.Count == 3) return p;
+                                if (p.Count == 4)
+                                {
+                                    return new List<long>{
+                                        p[0],
+                                        p[1],
+                                        p[2],
+                                        p[0],
+                                        p[2],
+                                        p[3]
+                                    };
+                                }
+                                throw new InvalidOperationException();
                             })
                             .Select(i => (short)i)
                             .ToArray();
@@ -94,14 +106,14 @@ namespace ChamberLib.FbxSharp
                     if (normalElement.MappingMode == LayerElement.EMappingMode.ByPolygonVertex &&
                         normalElement.ReferenceMode == LayerElement.EReferenceMode.Direct)
                     {
-                        if (normals.Count != part.Indexes.Indexes.Length)
+                        if (normals.Count != polygonVertexIndexes.Count)// part.Indexes.Indexes.Length)
                             throw new InvalidOperationException();
 
                         int i;
                         for (i = 0; i < normals.Count; i++)
                         {
                             var n = normals[i].ToChamber().ToVectorXYZ();
-                            var index = part.Indexes.Indexes[i];
+                            var index = polygonVertexIndexes[i];
                             part.Vertexes.Vertices[index].SetNormal(n);
                         }
                     }
@@ -118,14 +130,14 @@ namespace ChamberLib.FbxSharp
                     if (uvElement.MappingMode == LayerElement.EMappingMode.ByPolygonVertex &&
                         uvElement.ReferenceMode == LayerElement.EReferenceMode.IndexToDirect)
                     {
-                        if (uvindexes.Count != part.Indexes.Indexes.Length)
+                        if (uvindexes.Count != polygonVertexIndexes.Count)// part.Indexes.Indexes.Length)
                             throw new InvalidOperationException();
 
                         int i;
-                        for (i = 0; i < normals.Count; i++)
+                        for (i = 0; i < uvindexes.Count; i++)
                         {
                             var uvindex = uvindexes[i];
-                            var index = part.Indexes.Indexes[i];
+                            var index = polygonVertexIndexes[i];
                             var uv = uvs[uvindex].ToChamber();
                             var uv2 = new Vector2(uv.X, 1-uv.Y);
                             part.Vertexes.Vertices[index].SetTextureCoords(uv2);
