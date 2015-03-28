@@ -46,6 +46,8 @@ namespace ChamberLib.FbxSharp
             var model = new ModelContent();
             model.Filename = filename;
 
+            var materials = new Dictionary<SurfaceMaterial, MaterialContent>();
+
             var bonesByNode = new Dictionary<Node, BoneContent>();
             foreach (var node in scene.Nodes)
             {
@@ -139,58 +141,83 @@ namespace ChamberLib.FbxSharp
                     var mats = matelem.GetDirectArray().List;
                     var matindexes = matelem.GetIndexArray().List;
 
-                    if (matelem.MappingMode == LayerElement.EMappingMode.AllSame &&
+                    if (//matelem.MappingMode == LayerElement.EMappingMode.AllSame &&
                         matelem.ReferenceMode == LayerElement.EReferenceMode.IndexToDirect)
                     {
                         var material = mats[0];
-                        var material2 = new MaterialContent();
-                        material2.Shader = importer.ImportShader("$skinned", importer);
-                        material2.Alpha = 1;
-                        material2.DiffuseColor = new Vector3(0.5f, 0.5f, 0.5f);
-                        material2.Name = material.Name;
 
-                        if (material is SurfaceLambert)
+                        if (!materials.ContainsKey(material))
                         {
-                            var lambert = material as SurfaceLambert;
-                            material2.DiffuseColor =
-                                ConvertMaterialColor(lambert, "Diffuse", lambert.Diffuse).ToChamber();
-                            material2.EmissiveColor =
-                                ConvertMaterialColor(lambert, "Emissive", lambert.Emissive).ToChamber();
-                        }
-                        else
-                        {
-                            material2.DiffuseColor =
-                                ConvertMaterialColor(material, "Diffuse").ToChamber();
-                            material2.EmissiveColor =
-                                ConvertMaterialColor(material, "Emissive").ToChamber();
-                        }
+                            var material2 = new MaterialContent();
+                            material2.Shader = importer.ImportShader("$skinned", importer);
+                            material2.Alpha = 1;
+                            material2.DiffuseColor = new Vector3(0.5f, 0.5f, 0.5f);
+                            material2.Name = material.Name;
 
-                        if (material is SurfacePhong)
-                        {
-                            var phong = material as SurfacePhong;
-
-                            material2.SpecularColor =
-                                ConvertMaterialColor(phong, "Specular", phong.Specular).ToChamber();
-
-                            var props =
-                                phong.FindProperties(
-                                    p => p.Name.ToLower() == "shininessexponent" ||
-                                         p.Name.ToLower() == "shininess");
-                            double shininess = 0;
-                            foreach (var prop in props)
+                            Property diffuseProp;
+                            Property emissiveProp;
+                            Property textureProp;
+                            if (material is SurfaceLambert)
                             {
-                                if (prop.PropertyDataType == typeof(double))
+                                var lambert = material as SurfaceLambert;
+                                diffuseProp = GetMaterialColorProperty(lambert, "Diffuse", lambert.Diffuse);
+                                emissiveProp = GetMaterialColorProperty(lambert, "Emissive", lambert.Emissive);
+                                textureProp = FindTextureProperty(lambert, "Diffuse", lambert.Diffuse);
+                            }
+                            else
+                            {
+                                diffuseProp = GetMaterialColorProperty(material, "Diffuse");
+                                emissiveProp = GetMaterialColorProperty(material, "Emissive");
+                                textureProp = FindTextureProperty(material, "Diffuse");
+                            }
+
+                            if (diffuseProp != null)
+                            {
+                                material2.DiffuseColor = GetPropertyValue(diffuseProp);
+                            }
+                            if (emissiveProp != null)
+                            {
+                                material2.EmissiveColor = GetPropertyValue(emissiveProp);
+                            }
+                            if (textureProp != null)
+                            {
+                                var tex = GetMaterialTexture(textureProp, importer, filename);
+                                if (tex != null)
+                                    material2.Texture = tex;
+                            }
+
+                            if (material is SurfacePhong)
+                            {
+                                var phong = material as SurfacePhong;
+
+                                var specularProp = GetMaterialColorProperty(phong, "Specular", phong.Specular);
+                                if (specularProp != null)
                                 {
-                                    shininess = prop.Get<double>();
-                                    if (shininess > 0)
-                                        break;
+                                    material2.SpecularColor = GetPropertyValue(specularProp);
+
+                                    var props =
+                                        phong.FindProperties(
+                                            p => p.Name.ToLower() == "shininessexponent" ||
+                                            p.Name.ToLower() == "shininess");
+                                    double shininess = 0;
+                                    foreach (var prop in props)
+                                    {
+                                        if (prop.PropertyDataType == typeof(double))
+                                        {
+                                            shininess = prop.Get<double>();
+                                            if (shininess > 0)
+                                                break;
+                                        }
+                                    }
+
+                                    material2.SpecularPower = (float)shininess;
                                 }
                             }
 
-                            material2.SpecularPower = (float)shininess;
+                            materials[material] = material2;
                         }
 
-                        part.Material = material2;
+                        part.Material = materials[material];
                     }
                     else
                     {
@@ -222,7 +249,7 @@ namespace ChamberLib.FbxSharp
             return model;
         }
 
-        static _FbxSharp.Vector3 ConvertMaterialColor(SurfaceMaterial material, string name, Property include=null)
+        static Property GetMaterialColorProperty(SurfaceMaterial material, string name, Property include=null)
         {
             var name1 = name.ToLower();
             var name2 = name1 + "color";
@@ -242,7 +269,7 @@ namespace ChamberLib.FbxSharp
                 {
                     v = (_FbxSharp.Vector3)p.GetValue();
                     if (v != _FbxSharp.Vector3.Zero)
-                        return v;
+                        return p;
                 }
             }
 
@@ -252,11 +279,69 @@ namespace ChamberLib.FbxSharp
                 {
                     v = p.Get<_FbxSharp.Color>().ToVector3();
                     if (v != _FbxSharp.Vector3.Zero)
-                        return v;
+                        return p;
                 }
             }
 
-            return _FbxSharp.Vector3.Zero;
+            return null;
+        }
+
+        static ChamberLib.Vector3 GetPropertyValue(Property property)
+        {
+            if (property.PropertyDataType == typeof(_FbxSharp.Vector3))
+            {
+                return ((_FbxSharp.Vector3)property.GetValue()).ToChamber();
+            }
+            if (property.PropertyDataType == typeof(_FbxSharp.Color))
+            {
+                return property.Get<_FbxSharp.Color>().ToVector3().ToChamber();
+            }
+
+            throw new InvalidOperationException();
+        }
+
+        static Property FindTextureProperty(SurfaceMaterial material, string name, Property include=null)
+        {
+            var name1 = name.ToLower();
+            var name2 = name1 + "color";
+            var props = material.FindProperties(
+                p => p.Name.ToLower() == name1/* ||
+                     p.Name.ToLower() == name2*/).ToList();
+
+            var v = new _FbxSharp.Vector3(0, 0, 0);
+            if (include != null && !props.Contains(include))
+            {
+                props.Add(include);
+            }
+
+            foreach (var p in props)
+            {
+                foreach (var src in p.SrcObjects)
+                {
+                    if (src is Texture)
+                    {
+                        return p;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        static TextureContent GetMaterialTexture(Property property, IContentImporter importer, string modelFilename)
+        {
+            foreach (var srcobj in property.SrcObjects)
+            {
+                var tex = srcobj as Texture;
+                if (tex != null)
+                {
+                    var textureFilename = Path.Combine(Path.GetDirectoryName(modelFilename), tex.Filename);
+
+                    return importer.ImportTexture2D(textureFilename, importer);
+                }
+            }
+
+            return null;
         }
 
         static BoneContent BoneFromNode(Node node)
