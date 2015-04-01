@@ -149,6 +149,82 @@ namespace ChamberLib.FbxSharp
                         throw new NotImplementedException();
                     }
 
+                    ShaderContent shader;
+                    if (mesh.GetDeformerCount() < 1)
+                    {
+                        shader = importer.ImportShader("$basic", importer);
+                    }
+                    else if (mesh.GetDeformerCount() > 1)
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        shader = importer.ImportShader("$skinned", importer);
+
+                        if (!(mesh.GetDeformer(0) is Skin))
+                            throw new NotImplementedException();
+
+                        var skin = (Skin)mesh.GetDeformer(0);
+
+                        var boneIndicesWeights = new List<List<Tuple<int, double>>>();
+
+                        int i;
+                        for (i = 0; i < part.Vertexes.Vertices.Length; i++)
+                        {
+                            boneIndicesWeights.Add(new List<Tuple<int, double>>());
+                        }
+
+                        foreach (var cluster in skin.Clusters)
+                        {
+                            var cnode = cluster.GetLink();
+                            var cbone = bonesByNode[cnode];
+                            var boneIndex = model.Bones.IndexOf(cbone);
+
+                            for (i = 0; i < cluster.ControlPointIndices.Count; i++)
+                            {
+                                var index = cluster.ControlPointIndices[i];
+                                var weight = cluster.ControlPointWeights[i];
+
+                                boneIndicesWeights[index].Add(new Tuple<int, double>(boneIndex, weight));
+                            }
+                        }
+
+                        for (i = 0; i < part.Vertexes.Vertices.Length; i++)
+                        {
+                            var pairs = boneIndicesWeights[i];
+                            if (pairs.Count > 4)
+                                throw new NotImplementedException();
+                            if (pairs.Count < 1)
+                                continue;
+
+                            ChamberLib.Vector4 indices = ChamberLib.Vector4.Zero;
+                            ChamberLib.Vector4 weights = ChamberLib.Vector4.Zero;
+
+                            indices.X = pairs[0].Item1;
+                            weights.X = (float)pairs[0].Item2;
+
+                            if (pairs.Count > 1)
+                            {
+                                indices.Y = pairs[1].Item1;
+                                weights.Y = (float)pairs[1].Item2;
+                            }
+                            if (pairs.Count > 2)
+                            {
+                                indices.Z = pairs[2].Item1;
+                                weights.Z = (float)pairs[2].Item2;
+                            }
+                            if (pairs.Count > 3)
+                            {
+                                indices.W = pairs[3].Item1;
+                                weights.W = (float)pairs[3].Item2;
+                            }
+
+                            part.Vertexes.Vertices[i].SetBlendIndices(indices);
+                            part.Vertexes.Vertices[i].SetBlendWeights(weights);
+                        }
+                    }
+
 
                     var matelem = layer.GetMaterials();
                     var mats = matelem.GetDirectArray().List;
@@ -162,7 +238,7 @@ namespace ChamberLib.FbxSharp
                         if (!materials.ContainsKey(material))
                         {
                             var material2 = new MaterialContent();
-                            material2.Shader = importer.ImportShader("$skinned", importer);
+                            material2.Shader = shader;
                             material2.Alpha = 1;
                             material2.DiffuseColor = new Vector3(0.5f, 0.5f, 0.5f);
                             material2.Name = material.Name;
