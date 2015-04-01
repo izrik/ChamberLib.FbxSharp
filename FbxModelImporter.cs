@@ -54,6 +54,10 @@ namespace ChamberLib.FbxSharp
                 var bone = BoneFromNode(node);
                 bonesByNode[node]=bone;
                 model.Bones.Add(bone);
+            }
+            foreach (var node in scene.Nodes)
+            {
+                var bone = bonesByNode[node];
 
                 if (node.GetNodeAttributeCount() > 0 &&
                     node.GetNodeAttributeByIndex(0) is Mesh)
