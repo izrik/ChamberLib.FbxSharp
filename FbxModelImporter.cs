@@ -84,18 +84,15 @@ namespace ChamberLib.FbxSharp
                         mesh.PolygonIndexes
                             .SelectMany(p => {
                                 if (p.Count == 3) return p;
-                                if (p.Count == 4)
+                                int i;
+                                var list = new List<long>();
+                                for (i = 2; i < p.Count; i++)
                                 {
-                                    return new List<long>{
-                                        p[0],
-                                        p[1],
-                                        p[2],
-                                        p[0],
-                                        p[2],
-                                        p[3]
-                                    };
+                                    list.Add(p[0]);
+                                    list.Add(p[i-1]);
+                                    list.Add(p[i]);
                                 }
-                                throw new InvalidOperationException();
+                                return list;
                             })
                             .Select(i => (short)i)
                             .ToArray();
