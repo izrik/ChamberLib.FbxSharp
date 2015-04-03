@@ -36,6 +36,8 @@
     <Compile Include="FbxModelImporter.cs" />
     <Compile Include="VectorHelper.cs" />
     <Compile Include="MatrixHelper.cs" />
+    <Compile Include="PolygonBuilder.cs" />
+    <Compile Include="Enumerables.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
