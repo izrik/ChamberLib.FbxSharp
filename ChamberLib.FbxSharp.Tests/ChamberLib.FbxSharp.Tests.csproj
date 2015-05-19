@@ -34,6 +34,13 @@
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="ChamberLib">
+      <HintPath>..\..\packages\ChamberLib.0.3\lib\net40\ChamberLib.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="FbxSharp">
+      <HintPath>..\packages\FbxSharp.0.2.1\lib\net40\FbxSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -43,14 +50,6 @@
     <ProjectReference Include="..\ChamberLib.FbxSharp.csproj">
       <Project>{4ABB80B8-8FBE-4592-9738-3C8D9366EA0F}</Project>
       <Name>ChamberLib.FbxSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\FbxSharp\FbxSharp.csproj">
-      <Project>{64FAA76A-CAEA-42A3-9E23-660CFF84394B}</Project>
-      <Name>FbxSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\ChamberLib\ChamberLib.csproj">
-      <Project>{7DE0B8DB-460B-4455-9BAD-B4FF1280F3CE}</Project>
-      <Name>ChamberLib</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

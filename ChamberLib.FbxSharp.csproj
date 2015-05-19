@@ -30,6 +30,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="ChamberLib">
+      <HintPath>..\packages\ChamberLib.0.3\lib\net40\ChamberLib.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="FbxSharp">
+      <HintPath>packages\FbxSharp.0.2.1\lib\net40\FbxSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -45,15 +52,6 @@
     <None Include="README.md" />
     <None Include="ChamberLib.FbxSharp.nuspec" />
     <None Include="ChamberLib.FbxSharp.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ChamberLib\ChamberLib.csproj">
-      <Project>{7DE0B8DB-460B-4455-9BAD-B4FF1280F3CE}</Project>
-      <Name>ChamberLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="FbxSharp\FbxSharp.csproj">
-      <Project>{64FAA76A-CAEA-42A3-9E23-660CFF84394B}</Project>
-      <Name>FbxSharp</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
