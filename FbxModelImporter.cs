@@ -48,11 +48,18 @@ namespace ChamberLib.FbxSharp
 
 
             var bonesByNode = new Dictionary<Node, BoneContent>();
+            var nodesByBone = new Dictionary<BoneContent, Node>();
             foreach (var node in scene.Nodes)
             {
                 var bone = BoneFromNode(node);
-                bonesByNode[node]=bone;
+                bonesByNode[node] = bone;
+                nodesByBone[bone] = node;
                 model.Bones.Add(bone);
+                if (node == scene.GetRootNode())
+                {
+                    model.RootBoneIndex = model.Bones.Count - 1;
+                    bone.Transform = bone.Transform.Transposed();
+                }
             }
             foreach (var node in scene.Nodes)
             {
@@ -64,9 +71,6 @@ namespace ChamberLib.FbxSharp
                     var mesh = (Mesh)node.GetNodeAttributeByIndex(0);
                     var mesh2 = new MeshContent();
                     model.Meshes.Add(mesh2);
-
-
-
 
                     bool isSkinned = true;
                     ShaderContent shader;
@@ -84,16 +88,22 @@ namespace ChamberLib.FbxSharp
                         shader = importer.ImportShader("$skinned", importer);
                     }
 
+                    // calculate the global transform for the mesh
 
+                    var meshTransform = node.EvaluateGlobalTransform();
 
-                    // extract the blend indices and weights
+                    // extract the vertex postions
 
                     var vertices =
                         Enumerable.Range(0, mesh.GetControlPointsCount())
-                            .Select(ix =>
-                                new Vertex_PBiBwNT {
-                                    Position = mesh.GetControlPointAt((int)ix).ToChamber().ToVectorXYZ()
-                                })
+                            .Select(ix => {
+                                var cp = mesh.GetControlPointAt((int)ix);
+                                var baked = meshTransform.MultNormalize(cp);
+                                var pos = baked.ToChamber().ToVectorXYZ();
+                                return new Vertex_PBiBwNT {
+                                    Position = pos
+                                };
+                            })
                             .ToList();
 
                     // extract the blend indices and weights
@@ -245,7 +255,7 @@ namespace ChamberLib.FbxSharp
 
                                 var v = normalElement.GetDirectArray().GetAt(nindex);
                                 var vertex = poly.Vertexes[i];
-                                vertex.Normal = v.ToChamber().ToVectorXYZ();
+                                vertex.Normal = meshTransform.MultNormalize(v).ToChamber().ToVectorXYZ();
                                 poly.Vertexes[i] = vertex;
                                 k++;
                             }
@@ -388,15 +398,135 @@ namespace ChamberLib.FbxSharp
 
             if (scene.Poses.Count > 0)
             {
+                if (_poseMatrices == null)
+                {
+                    _poseMatrices = Enumerable.Repeat(Matrix.CreateScale(0), bonesByNode.Count).ToList();
+                }
+
                 var pose = scene.Poses[0];
                 foreach (var pi in pose.PoseInfos)
                 {
                     var bone = bonesByNode[pi.Node];
-                    bone.InverseBindPose = pi.Matrix.ToChamber();
+                    var m = pi.Matrix.ToChamber();
+                    _poseMatrices[model.Bones.IndexOf(bone)] = m;
+                    bone.Transform = m;
                 }
             }
 
+            // animations
+            var stack = scene.GetCurrentAnimationStack();
+            if (stack == null)
+            {
+                foreach (var obj in scene.SrcObjects)
+                {
+                    stack = obj as AnimStack;
+                    if (stack != null)
+                    {
+                        scene.SetCurrentAnimationStack(stack);
+                        break;
+                    }
+                }
+            }
+            if (stack != null)
+            {
+                var sequences = new Dictionary<string, AnimationSequence>();
+
+                var timespan = stack.GetLocalTimeSpan();
+                var layer = (AnimLayer)stack.SrcObjects.FirstOrDefault(x => x is AnimLayer);
+
+                var eval = scene.GetAnimationEvaluator();
+                var frames = new List<AnimationFrame>();
+                FbxTime t;
+                int i;
+                var startOffset = timespan.Start.GetSecondDouble();
+                for (t = timespan.Start; t.Value <= timespan.Stop.Value; t = new FbxTime(t.Value + 769769300L))
+                {
+                    var transforms = new ChamberLib.Matrix[model.Bones.Count];
+                    for (i = 0; i < model.Bones.Count; i++)
+                    {
+                        var node = nodesByBone[model.Bones[i]];
+                        var m = eval.GetNodeLocalTransform(node, t).ToChamber();
+
+                        transforms[i] = m;
+                    }
+                    frames.Add(new AnimationFrame((float)(t.GetSecondDouble() - startOffset), transforms));
+                }
+
+                sequences.Add(
+                    stack.Name.Replace("AnimStack::", ""), 
+                    new AnimationSequence(
+                        (float)(timespan.Stop.GetSecondDouble() - timespan.Start.GetSecondDouble()),
+                        frames.ToArray(),
+                        stack.Name));
+
+                var skeletonHierarchy = Enumerable.Repeat(-1, model.Bones.Count).ToList();
+                for (i = 0; i < model.Bones.Count; i++)
+                {
+                    foreach (var childIndex in model.Bones[i].ChildBoneIndexes)
+                    {
+                        skeletonHierarchy[childIndex] = i;
+                    }
+                }
+                var localTransforms = new Matrix[model.Bones.Count];
+                var globalTransforms = model.Bones.Select(b => b.Transform).ToArray();
+                for (i = 0; i < model.Bones.Count; i++)
+                {
+                    var p = skeletonHierarchy[i];
+                    if (p < 0)
+                    {
+                        localTransforms[i] = globalTransforms[i];
+                    }
+                    else
+                    {
+                        localTransforms[i] = globalTransforms[i] * globalTransforms[p].Inverted();
+                    }
+                }
+
+                var absoluteTransforms = new Matrix[model.Bones.Count];
+                for (i = 0; i < model.Bones.Count; i++)
+                {
+                    absoluteTransforms[i] = globalTransforms[i].Inverted();
+                }
+
+                model.AnimationData =
+                    new AnimationData(
+                        sequences,
+                        localTransforms.ToList(),
+                        absoluteTransforms.ToList(),
+                        skeletonHierarchy);
+            }
+
             return model;
+        }
+
+        public static List<Matrix> _poseMatrices;
+
+        float[] CalcMinMax(IEnumerable<Matrix> ms)
+        {
+            var fs = ms.SelectMany(m => m.EnumerateValuesColumnMajor()).ToList();
+            var min = fs.Min();
+            var max = fs.Max();
+            return new float[]{ min, max };
+        }
+
+        static void CalculateGlobalTransform(int index, Matrix[] globalTransforms, Matrix[] localTransforms, List<int> skeletonHierarchy, bool[] done)
+        {
+            if (done[index]) return;
+
+            var p = skeletonHierarchy[index];
+            if (p < 0)
+            {
+                globalTransforms[index] = localTransforms[index];
+            }
+            else
+            {
+                if (!done[p])
+                {
+                    CalculateGlobalTransform(p, globalTransforms, localTransforms, skeletonHierarchy, done);
+                }
+                globalTransforms[index] = globalTransforms[p] * localTransforms[index];
+            }
+            done[index] = true;
         }
 
         static Dictionary<SurfaceMaterial, Dictionary<ShaderContent, MaterialContent>> _materialsCache = new Dictionary<SurfaceMaterial, Dictionary<ShaderContent, MaterialContent>>();
@@ -543,7 +673,6 @@ namespace ChamberLib.FbxSharp
                 p => p.Name.ToLower() == name1/* ||
                      p.Name.ToLower() == name2*/).ToList();
 
-            var v = new _FbxSharp.Vector3(0, 0, 0);
             if (include != null && !props.Contains(include))
             {
                 props.Add(include);
