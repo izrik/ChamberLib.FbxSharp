@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>ChamberLib.FbxSharp</id>
-    <version>0.1</version>
+    <version>$version$</version>
     <title>ChamberLib.FbxSharp</title>
     <authors>izrik,metaindu</authors>
     <owners>izrik,metaindu</owners>
@@ -11,14 +11,18 @@
     <iconUrl>https://raw.githubusercontent.com/izrik/ChamberLib.FbxSharp/master/ChamberLib.FbxSharp.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Load models from FBX files using FbxSharp</description>
-    <releaseNotes>Initial release.</releaseNotes>
+    <releaseNotes>First fully functional prototype.</releaseNotes>
     <copyright>Copyright 2015 izrik and Metaphysics Industries, Inc.</copyright>
     <tags>chamber 3d game engine fbx model files</tags>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="System" targetFramework="" />
     </frameworkAssemblies>
+    <dependencies>
+        <dependency id="FbxSharp" version="0.2.1" />
+        <dependency id="ChamberLib" version="0.3" />
+    </dependencies>
   </metadata>
   <files>
-    <file src="bin/Debug/ChamberLib.FbxSharp.dll" target="lib" />
+    <file src="bin/Debug/ChamberLib.FbxSharp.dll" target="lib/net40" />
   </files>
 </package>
