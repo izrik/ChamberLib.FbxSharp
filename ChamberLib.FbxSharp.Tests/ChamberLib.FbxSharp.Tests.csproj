@@ -35,7 +35,7 @@
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="ChamberLib">
-      <HintPath>..\..\packages\ChamberLib.0.3\lib\net40\ChamberLib.dll</HintPath>
+      <HintPath>..\packages\ChamberLib.0.3\lib\net40\ChamberLib.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="FbxSharp">
