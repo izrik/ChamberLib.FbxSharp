@@ -47,12 +47,6 @@
     <Compile Include="MatrixHelperTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ChamberLib.FbxSharp.csproj">
-      <Project>{4ABB80B8-8FBE-4592-9738-3C8D9366EA0F}</Project>
-      <Name>ChamberLib.FbxSharp</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
 </Project>
