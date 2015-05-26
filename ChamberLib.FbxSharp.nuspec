@@ -18,7 +18,7 @@
       <frameworkAssembly assemblyName="System" targetFramework="" />
     </frameworkAssemblies>
     <dependencies>
-        <dependency id="FbxSharp" version="0.2.1" />
+        <dependency id="FbxSharp" version="0.3" />
         <dependency id="ChamberLib" version="0.3" />
     </dependencies>
   </metadata>

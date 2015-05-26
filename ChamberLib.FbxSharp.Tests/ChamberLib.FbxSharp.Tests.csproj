@@ -39,7 +39,7 @@
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="FbxSharp">
-      <HintPath>..\packages\FbxSharp.0.2.1\lib\net40\FbxSharp.dll</HintPath>
+      <HintPath>..\packages\FbxSharp.0.3\lib\net40\FbxSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
