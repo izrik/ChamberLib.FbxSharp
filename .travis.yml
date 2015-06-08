@@ -1,0 +1,16 @@
+
+language: csharp
+solution: ChamberLib.FbxSharp.sln
+
+install:
+  - sudo apt-get install nunit-console
+
+script:
+  - nuget restore ChamberLib.FbxSharp.sln
+  - xbuild /p:Configuration=Debug ChamberLib.FbxSharp.sln
+  - nunit-console ./ChamberLib.FbxSharp.Tests/bin/Debug/ChamberLib.FbxSharp.Tests.dll
+
+branches:
+  only:
+    - master
+
