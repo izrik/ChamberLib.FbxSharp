@@ -30,12 +30,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="ChamberLib">
-      <HintPath>packages\ChamberLib.0.3\lib\net40\ChamberLib.dll</HintPath>
-    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="FbxSharp">
       <HintPath>packages\FbxSharp.0.3\lib\net40\FbxSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="ChamberLib">
+      <HintPath>packages\ChamberLib.0.4\lib\net40\ChamberLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
