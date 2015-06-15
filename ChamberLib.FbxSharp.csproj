@@ -35,7 +35,7 @@
       <HintPath>packages\FbxSharp.0.3\lib\net40\FbxSharp.dll</HintPath>
     </Reference>
     <Reference Include="ChamberLib">
-      <HintPath>packages\ChamberLib.0.4\lib\net40\ChamberLib.dll</HintPath>
+      <HintPath>packages\ChamberLib.0.5\lib\net40\ChamberLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
