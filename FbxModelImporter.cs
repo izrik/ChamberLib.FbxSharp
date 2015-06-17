@@ -344,6 +344,8 @@ namespace ChamberLib.FbxSharp
                     model.VertexBuffers.Add(vertexBuffer);
                     model.IndexBuffers.Add(indexBuffer);
 
+                    var indexByVertex = new Dictionary<Vertex_PBiBwNT, int>();
+
                     foreach (var mat in polygonsByMaterial.Keys)
                     {
                         var polys = polygonsByMaterial[mat];
@@ -351,9 +353,16 @@ namespace ChamberLib.FbxSharp
 
                         var startIndex = indices.Count;
 
+                        int n0 = vertices.Count;
                         vertices.AddRange(polyverts.Except(vertset));
+                        int n1 = vertices.Count;
+                        int i;
+                        for (i = n0; i < n1; i++)
+                        {
+                            indexByVertex[vertices[i]] = i;
+                        }
 
-                        var polyindices = polyverts.Select(p => vertices.IndexOf(p));
+                        var polyindices = polyverts.Select(p => indexByVertex[p]);
                         indices.AddRange(polyindices);
 
                         vertset.AddRange(polyverts);
