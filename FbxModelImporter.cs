@@ -407,17 +407,11 @@ namespace ChamberLib.FbxSharp
 
             if (scene.Poses.Count > 0)
             {
-                if (_poseMatrices == null)
-                {
-                    _poseMatrices = Enumerable.Repeat(Matrix.CreateScale(0), bonesByNode.Count).ToList();
-                }
-
                 var pose = scene.Poses[0];
                 foreach (var pi in pose.PoseInfos)
                 {
                     var bone = bonesByNode[pi.Node];
                     var m = pi.Matrix.ToChamber();
-                    _poseMatrices[model.Bones.IndexOf(bone)] = m;
                     bone.Transform = m;
                 }
             }
@@ -507,8 +501,6 @@ namespace ChamberLib.FbxSharp
 
             return model;
         }
-
-        public static List<Matrix> _poseMatrices;
 
         float[] CalcMinMax(IEnumerable<Matrix> ms)
         {
