@@ -417,6 +417,7 @@ namespace ChamberLib.FbxSharp
             }
 
             // animations
+            Dictionary<string, AnimationSequence> sequences = null;
             var stack = scene.GetCurrentAnimationStack();
             if (stack == null)
             {
@@ -432,7 +433,7 @@ namespace ChamberLib.FbxSharp
             }
             if (stack != null)
             {
-                var sequences = new Dictionary<string, AnimationSequence>();
+                sequences = new Dictionary<string, AnimationSequence>();
 
                 var timespan = stack.GetLocalTimeSpan();
                 var layer = (AnimLayer)stack.SrcObjects.FirstOrDefault(x => x is AnimLayer);
@@ -461,8 +462,15 @@ namespace ChamberLib.FbxSharp
                         (float)(timespan.Stop.GetSecondDouble() - timespan.Start.GetSecondDouble()),
                         frames.ToArray(),
                         stack.Name));
+            }
 
-                var skeletonHierarchy = Enumerable.Repeat(-1, model.Bones.Count).ToList();
+            Matrix[] localTransforms = null;
+            Matrix[] absoluteTransforms = null;
+            List<int> skeletonHierarchy = null;
+            if (model.Bones != null && model.Bones.Count > 0)
+            {
+                skeletonHierarchy = Enumerable.Repeat(-1, model.Bones.Count).ToList();
+                int i;
                 for (i = 0; i < model.Bones.Count; i++)
                 {
                     foreach (var childIndex in model.Bones[i].ChildBoneIndexes)
@@ -470,7 +478,7 @@ namespace ChamberLib.FbxSharp
                         skeletonHierarchy[childIndex] = i;
                     }
                 }
-                var localTransforms = new Matrix[model.Bones.Count];
+                localTransforms = new Matrix[model.Bones.Count];
                 var globalTransforms = model.Bones.Select(b => b.Transform).ToArray();
                 for (i = 0; i < model.Bones.Count; i++)
                 {
@@ -485,11 +493,22 @@ namespace ChamberLib.FbxSharp
                     }
                 }
 
-                var absoluteTransforms = new Matrix[model.Bones.Count];
+                absoluteTransforms = new Matrix[model.Bones.Count];
                 for (i = 0; i < model.Bones.Count; i++)
                 {
                     absoluteTransforms[i] = globalTransforms[i].Inverted();
                 }
+            }
+
+            if (sequences != null ||
+                localTransforms != null ||
+                absoluteTransforms!=null||
+                skeletonHierarchy!=null)
+            {
+                if (sequences == null) sequences = new Dictionary<string, AnimationSequence>();
+                if (localTransforms==null) localTransforms = new Matrix[0];
+                if (absoluteTransforms==null) absoluteTransforms=new Matrix[0];
+                if (skeletonHierarchy==null) skeletonHierarchy = new List<int>();
 
                 model.AnimationData =
                     new AnimationData(
