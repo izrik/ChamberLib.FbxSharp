@@ -72,6 +72,7 @@ namespace ChamberLib.FbxSharp
                     var mesh2 = new MeshContent();
                     model.Meshes.Add(mesh2);
                     mesh2.ParentBone = bone;
+                    mesh2.Name = mesh.GetName();
 
                     bool isSkinned = true;
                     ShaderContent shader;
