@@ -11,7 +11,7 @@
     <iconUrl>https://raw.githubusercontent.com/izrik/ChamberLib.FbxSharp/master/ChamberLib.FbxSharp.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Load models from FBX files using FbxSharp</description>
-    <releaseNotes>Allow empty clusters</releaseNotes>
+    <releaseNotes>Minor fixes to the MeshContent content model.</releaseNotes>
     <copyright>Copyright 2015 izrik and Metaphysics Industries, Inc.</copyright>
     <tags>chamber 3d game engine fbx model files</tags>
     <frameworkAssemblies>
@@ -19,7 +19,7 @@
     </frameworkAssemblies>
     <dependencies>
         <dependency id="FbxSharp" version="0.4.1" />
-        <dependency id="ChamberLib" version="0.5" />
+        <dependency id="ChamberLib" version="0.6" />
     </dependencies>
   </metadata>
   <files>
