@@ -29,12 +29,12 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ChamberLib">
+      <HintPath>packages\ChamberLib.0.7\lib\net40\ChamberLib.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="FbxSharp">
       <HintPath>packages\FbxSharp.0.4.1\lib\net40\FbxSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="ChamberLib">
-      <HintPath>packages\ChamberLib.0.6\lib\net40\ChamberLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
