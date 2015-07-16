@@ -19,7 +19,7 @@
     </frameworkAssemblies>
     <dependencies>
         <dependency id="FbxSharp" version="0.4.1" />
-        <dependency id="ChamberLib" version="0.7" />
+        <dependency id="ChamberLib" version="0.10" />
     </dependencies>
   </metadata>
   <files>
