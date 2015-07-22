@@ -75,11 +75,11 @@ namespace ChamberLib.FbxSharp
                     mesh2.Name = mesh.GetName();
 
                     bool isSkinned = true;
-                    ShaderContent shader;
+                    ShaderContent vert;
                     if (mesh.GetDeformerCount() < 1)
                     {
                         isSkinned = false;
-                        shader = importer.ImportShader("$basic", importer);
+                        vert = importer.ImportShaderStage("$basic", ShaderType.Vertex, importer);
                     }
                     else if (mesh.GetDeformerCount() > 1)
                     {
@@ -87,8 +87,9 @@ namespace ChamberLib.FbxSharp
                     }
                     else
                     {
-                        shader = importer.ImportShader("$skinned", importer);
+                        vert = importer.ImportShaderStage("$skinned", ShaderType.Vertex, importer);
                     }
+                    var frag = importer.ImportShaderStage("$fragment", ShaderType.Fragment, importer);
 
                     // calculate the global transform for the mesh
 
@@ -370,7 +371,7 @@ namespace ChamberLib.FbxSharp
                         vertset.AddRange(polyverts);
 
                         mesh2.Parts.Add(new PartContent() {
-                            Material = GetMaterialFromMaterial(mat, shader, importer, filename),
+                            Material = GetMaterialFromMaterial(mat, vert, frag, importer, filename),
                             StartIndex = startIndex,
                             PrimitiveCount = polys.Count,
                             Vertexes = vertexBuffer,
@@ -551,22 +552,25 @@ namespace ChamberLib.FbxSharp
             done[index] = true;
         }
 
-        static Dictionary<SurfaceMaterial, Dictionary<ShaderContent, MaterialContent>> _materialsCache = new Dictionary<SurfaceMaterial, Dictionary<ShaderContent, MaterialContent>>();
+        static Dictionary<SurfaceMaterial, Dictionary<Tuple<ShaderContent, ShaderContent>, MaterialContent>> _materialsCache =
+            new Dictionary<SurfaceMaterial, Dictionary<Tuple<ShaderContent, ShaderContent>, MaterialContent>>();
 
-        static MaterialContent GetMaterialFromMaterial(SurfaceMaterial material, ShaderContent shader, IContentImporter importer, string filename)
+        static MaterialContent GetMaterialFromMaterial(SurfaceMaterial material, ShaderContent vertexShaderStage, ShaderContent fragmentShaderStage, IContentImporter importer, string filename)
         {
-            if (_materialsCache.ContainsKey(material) && _materialsCache[material].ContainsKey(shader))
+            var shaderTuple = new Tuple<ShaderContent, ShaderContent>(vertexShaderStage, fragmentShaderStage);
+            if (_materialsCache.ContainsKey(material) && _materialsCache[material].ContainsKey(shaderTuple))
             {
-                return _materialsCache[material][shader];
+                return _materialsCache[material][shaderTuple];
             }
 
             if (!_materialsCache.ContainsKey(material))
             {
-                _materialsCache[material] = new Dictionary<ShaderContent, MaterialContent>();
+                _materialsCache[material] = new Dictionary<Tuple<ShaderContent, ShaderContent>, MaterialContent>();
             }
 
             var material2 = new MaterialContent();
-            material2.Shader = shader;
+            material2.VertexShader = vertexShaderStage;
+            material2.FragmentShader = fragmentShaderStage;
             material2.Alpha = 1;
             material2.DiffuseColor = new Vector3(0.5f, 0.5f, 0.5f);
             material2.Name = material.Name;
@@ -631,7 +635,7 @@ namespace ChamberLib.FbxSharp
                 }
             }
 
-            _materialsCache[material][shader] = material2;
+            _materialsCache[material][shaderTuple] = material2;
 
             return material2;
         }
