@@ -89,7 +89,7 @@ namespace ChamberLib.FbxSharp
                     {
                         vert = importer.ImportShaderStage("$skinned", ShaderType.Vertex, importer);
                     }
-                    var frag = importer.ImportShaderStage("$fragment", ShaderType.Fragment, importer);
+                    var frag = importer.ImportShaderStage("$basic", ShaderType.Fragment, importer);
 
                     // calculate the global transform for the mesh
 
