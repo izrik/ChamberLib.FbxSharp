@@ -46,6 +46,7 @@
     <None Include="ChamberLib.FbxSharp.nuspec" />
     <None Include="ChamberLib.FbxSharp.png" />
     <None Include="packages.config" />
+    <None Include=".travis.yml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ChamberLib\ChamberLib.csproj">

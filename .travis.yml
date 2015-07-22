@@ -2,8 +2,12 @@
 language: csharp
 solution: ChamberLib.FbxSharp.sln
 
-install:
-  - sudo apt-get install nunit-console
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - nunit-console
 
 script:
   - nuget restore ChamberLib.FbxSharp.sln
