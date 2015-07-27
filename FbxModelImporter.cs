@@ -635,6 +635,15 @@ namespace ChamberLib.FbxSharp
                 }
             }
 
+            if (material is SurfaceLambert)
+            {
+                var transparencyFactor = (material as SurfaceLambert).TransparencyFactor;
+                if (transparencyFactor != null)
+                {
+                    material2.Alpha = (float)(1 - transparencyFactor.Get());
+                }
+            }
+
             _materialsCache[material][shaderTuple] = material2;
 
             return material2;
