@@ -420,23 +420,18 @@ namespace ChamberLib.FbxSharp
             }
 
             // animations
+
             Dictionary<string, AnimationSequence> sequences = null;
-            var stack = scene.GetCurrentAnimationStack();
-            if (stack == null)
+            var numstacks = scene.GetSrcObjectCount<AnimStack>();
+            int j;
+            for (j = 0; j < numstacks; j++)
             {
-                foreach (var obj in scene.SrcObjects)
+                var stack = scene.GetSrcObject<AnimStack>(j);
+
+                if (sequences == null)
                 {
-                    stack = obj as AnimStack;
-                    if (stack != null)
-                    {
-                        scene.SetCurrentAnimationStack(stack);
-                        break;
-                    }
+                    sequences = new Dictionary<string, AnimationSequence>();
                 }
-            }
-            if (stack != null)
-            {
-                sequences = new Dictionary<string, AnimationSequence>();
 
                 var timespan = stack.GetLocalTimeSpan();
                 var layer = (AnimLayer)stack.SrcObjects.FirstOrDefault(x => x is AnimLayer);
@@ -460,7 +455,7 @@ namespace ChamberLib.FbxSharp
                 }
 
                 sequences.Add(
-                    stack.Name.Replace("AnimStack::", ""), 
+                    stack.Name.Replace("AnimStack::", ""),
                     new AnimationSequence(
                         (float)(timespan.Stop.GetSecondDouble() - timespan.Start.GetSecondDouble()),
                         frames.ToArray(),
