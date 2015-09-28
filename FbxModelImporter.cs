@@ -436,6 +436,7 @@ namespace ChamberLib.FbxSharp
                 var timespan = stack.GetLocalTimeSpan();
                 var layer = (AnimLayer)stack.SrcObjects.FirstOrDefault(x => x is AnimLayer);
 
+                scene.SetCurrentAnimationStack(stack);
                 var eval = scene.GetAnimationEvaluator();
                 var frames = new List<AnimationFrame>();
                 FbxTime t;
