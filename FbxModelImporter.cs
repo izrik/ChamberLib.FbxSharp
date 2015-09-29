@@ -455,12 +455,13 @@ namespace ChamberLib.FbxSharp
                     frames.Add(new AnimationFrame((float)(t.GetSecondDouble() - startOffset), transforms));
                 }
 
+                var name = stack.Name.Replace("AnimStack::", "");
                 sequences.Add(
-                    stack.Name.Replace("AnimStack::", ""),
+                    name,
                     new AnimationSequence(
                         (float)(timespan.Stop.GetSecondDouble() - timespan.Start.GetSecondDouble()),
                         frames.ToArray(),
-                        stack.Name));
+                        name));
             }
 
             Matrix[] localTransforms = null;
