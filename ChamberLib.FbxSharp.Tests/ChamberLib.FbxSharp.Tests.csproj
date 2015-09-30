@@ -31,16 +31,15 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ChamberLib, Version=0.10.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ChamberLib.0.10\lib\net40\ChamberLib.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="ChamberLib">
+      <HintPath>..\packages\ChamberLib.0.11\lib\net40\ChamberLib.dll</HintPath>
+    </Reference>
+    <Reference Include="FbxSharp">
+      <HintPath>..\packages\FbxSharp.0.6\lib\net40\FbxSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="FbxSharp">
-      <HintPath>..\packages\FbxSharp.0.4.1\lib\net40\FbxSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
