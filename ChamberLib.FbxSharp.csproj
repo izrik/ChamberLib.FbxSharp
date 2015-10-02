@@ -29,12 +29,6 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ChamberLib">
-      <HintPath>packages\ChamberLib.0.11\lib\net40\ChamberLib.dll</HintPath>
-    </Reference>
-    <Reference Include="FbxSharp">
-      <HintPath>packages\FbxSharp.0.6\lib\net40\FbxSharp.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
@@ -53,5 +47,15 @@
     <None Include="ChamberLib.FbxSharp.png" />
     <None Include="packages.config" />
     <None Include=".travis.yml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChamberLib\ChamberLib.csproj">
+      <Project>{7DE0B8DB-460B-4455-9BAD-B4FF1280F3CE}</Project>
+      <Name>ChamberLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FbxSharp\FbxSharp.csproj">
+      <Project>{64FAA76A-CAEA-42A3-9E23-660CFF84394B}</Project>
+      <Name>FbxSharp</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
