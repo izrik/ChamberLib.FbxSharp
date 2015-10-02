@@ -442,7 +442,9 @@ namespace ChamberLib.FbxSharp
                 FbxTime t;
                 int i;
                 var startOffset = timespan.Start.GetSecondDouble();
-                for (t = timespan.Start; t.Value <= timespan.Stop.Value; t = new FbxTime(t.Value + 769769300L))
+                const int framesPerSecond = 60;
+                const long timeStep = FbxTime.UnitsPerSecond / framesPerSecond;
+                for (t = timespan.Start; t.Value <= timespan.Stop.Value; t = new FbxTime(t.Value + timeStep))
                 {
                     var transforms = new ChamberLib.Matrix[model.Bones.Count];
                     for (i = 0; i < model.Bones.Count; i++)
