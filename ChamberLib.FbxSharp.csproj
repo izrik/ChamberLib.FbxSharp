@@ -32,6 +32,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.Git.cs" />
     <Compile Include="FbxModelImporter.cs" />
     <Compile Include="VectorHelper.cs" />
     <Compile Include="MatrixHelper.cs" />
@@ -58,4 +59,10 @@
       <Name>FbxSharp</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="pre-build.py" />
+  </ItemGroup>
+  <PropertyGroup>
+    <PreBuildEvent>python $(ProjectDir)pre-build.py $(ProjectDir)AssemblyInfo.Git.cs</PreBuildEvent>
+  </PropertyGroup>
 </Project>
