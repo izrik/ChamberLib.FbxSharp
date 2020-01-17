@@ -36,7 +36,7 @@ namespace ChamberLib.FbxSharp
                 throw new FileNotFoundException("The file could not be found", filename);
             }
 
-            var fimporter = new Importer();
+            var fimporter = new FbxImporter();
 
             var scene = fimporter.Import(filename);
 
@@ -47,8 +47,8 @@ namespace ChamberLib.FbxSharp
             model.Filename = filename;
 
 
-            var bonesByNode = new Dictionary<Node, BoneContent>();
-            var nodesByBone = new Dictionary<BoneContent, Node>();
+            var bonesByNode = new Dictionary<FbxNode, BoneContent>();
+            var nodesByBone = new Dictionary<BoneContent, FbxNode>();
             foreach (var node in scene.Nodes)
             {
                 var bone = BoneFromNode(node);
@@ -66,9 +66,9 @@ namespace ChamberLib.FbxSharp
                 var bone = bonesByNode[node];
 
                 if (node.GetNodeAttributeCount() > 0 &&
-                    node.GetNodeAttributeByIndex(0) is Mesh)
+                    node.GetNodeAttributeByIndex(0) is FbxMesh)
                 {
-                    var mesh = (Mesh)node.GetNodeAttributeByIndex(0);
+                    var mesh = (FbxMesh)node.GetNodeAttributeByIndex(0);
                     var mesh2 = new MeshContent();
                     model.Meshes.Add(mesh2);
                     mesh2.ParentBone = bone;
@@ -113,7 +113,7 @@ namespace ChamberLib.FbxSharp
 
                     if (mesh.GetDeformerCount() == 1)
                     {
-                        if (!(mesh.GetDeformer(0) is Skin))
+                        if (!(mesh.GetDeformer(0) is FbxSkin))
                             throw new NotImplementedException("Only Skin deformers are implemented");
 
                         var boneIndicesL =
@@ -131,7 +131,7 @@ namespace ChamberLib.FbxSharp
 
                         int i;
 
-                        var skin = (Skin)mesh.GetDeformer(0);
+                        var skin = (FbxSkin)mesh.GetDeformer(0);
                         foreach (var cluster in skin.Clusters)
                         {
                             var cnode = cluster.GetLink();
@@ -191,23 +191,23 @@ namespace ChamberLib.FbxSharp
                             Vertexes = p.Select(ix => vertices[(int)ix]).ToList(),
                         }).ToList();
 
-                    var polygonsByMaterial = new Dictionary<SurfaceMaterial, List<PolygonBuilder>>();
+                    var polygonsByMaterial = new Dictionary<FbxSurfaceMaterial, List<PolygonBuilder>>();
 
                     // organize the mesh's polygons by material
 
                     var layer = mesh.GetLayer(0);
                     var matelem = layer.GetMaterials();
                     var matindexes = matelem.MaterialIndexes.List;// GetIndexArray().List;
-                    if (matelem.ReferenceMode != LayerElement.EReferenceMode.IndexToDirect)
+                    if (matelem.ReferenceMode != FbxLayerElement.EReferenceMode.IndexToDirect)
                         throw new NotImplementedException("A materials must have a reference mode of IndexToDirect");
-                    if (matelem.MappingMode == LayerElement.EMappingMode.AllSame)
+                    if (matelem.MappingMode == FbxLayerElement.EMappingMode.AllSame)
                     {
                         // only one material
                         var material = node.GetMaterial(matindexes[0]);
 
                         polygonsByMaterial[material] = new List<PolygonBuilder>(polygons);
                     }
-                    else if (matelem.MappingMode == LayerElement.EMappingMode.ByPolygon)
+                    else if (matelem.MappingMode == FbxLayerElement.EMappingMode.ByPolygon)
                     {
                         // multiple materials
                         foreach (var mat in node.Materials)
@@ -231,12 +231,12 @@ namespace ChamberLib.FbxSharp
                     if (layer.GetNormals() != null)
                     {
                         var normalElement = layer.GetNormals();
-                        if (normalElement.MappingMode != LayerElement.EMappingMode.ByPolygonVertex)
+                        if (normalElement.MappingMode != FbxLayerElement.EMappingMode.ByPolygonVertex)
                         {
                             throw new NotImplementedException("Normals layer elements must have a mapping mode of ByPolygonVertex");
                         }
-                        if (normalElement.ReferenceMode != LayerElement.EReferenceMode.Direct &&
-                        normalElement.ReferenceMode != LayerElement.EReferenceMode.IndexToDirect)
+                        if (normalElement.ReferenceMode != FbxLayerElement.EReferenceMode.Direct &&
+                        normalElement.ReferenceMode != FbxLayerElement.EReferenceMode.IndexToDirect)
                         {
                             throw new NotImplementedException("Normals layer elements must have a reference mode of Direct or IndexToDirect");
                         }
@@ -247,7 +247,7 @@ namespace ChamberLib.FbxSharp
                             for (i = 0; i < poly.Vertexes.Count; i++)
                             {
                                 int nindex;
-                                if (normalElement.ReferenceMode == LayerElement.EReferenceMode.Direct)
+                                if (normalElement.ReferenceMode == FbxLayerElement.EReferenceMode.Direct)
                                 {
                                     nindex = k;
                                 }
@@ -270,12 +270,12 @@ namespace ChamberLib.FbxSharp
                     if (layer.GetUVs() != null)
                     {
                         var uvElement = layer.GetUVs();
-                        if (uvElement.MappingMode != LayerElement.EMappingMode.ByPolygonVertex)
+                        if (uvElement.MappingMode != FbxLayerElement.EMappingMode.ByPolygonVertex)
                         {
                             throw new NotImplementedException("UV layer elements must have a mapping mode of ByPolygonVertex");
                         }
-                        if (uvElement.ReferenceMode != LayerElement.EReferenceMode.Direct &&
-                            uvElement.ReferenceMode != LayerElement.EReferenceMode.IndexToDirect)
+                        if (uvElement.ReferenceMode != FbxLayerElement.EReferenceMode.Direct &&
+                            uvElement.ReferenceMode != FbxLayerElement.EReferenceMode.IndexToDirect)
                         {
                             throw new NotImplementedException("UV layer elements must have a reference mode of Direct or IndexToDirect");
                         }
@@ -286,7 +286,7 @@ namespace ChamberLib.FbxSharp
                             for (i = 0; i < poly.Vertexes.Count; i++)
                             {
                                 int nindex;
-                                if (uvElement.ReferenceMode == LayerElement.EReferenceMode.Direct)
+                                if (uvElement.ReferenceMode == FbxLayerElement.EReferenceMode.Direct)
                                 {
                                     nindex = k;
                                 }
@@ -422,11 +422,11 @@ namespace ChamberLib.FbxSharp
             // animations
 
             Dictionary<string, AnimationSequence> sequences = null;
-            var numstacks = scene.GetSrcObjectCount<AnimStack>();
+            var numstacks = scene.GetSrcObjectCount<FbxAnimStack>();
             int j;
             for (j = 0; j < numstacks; j++)
             {
-                var stack = scene.GetSrcObject<AnimStack>(j);
+                var stack = scene.GetSrcObject<FbxAnimStack>(j);
 
                 if (sequences == null)
                 {
@@ -434,7 +434,7 @@ namespace ChamberLib.FbxSharp
                 }
 
                 var timespan = stack.GetLocalTimeSpan();
-                var layer = (AnimLayer)stack.SrcObjects.FirstOrDefault(x => x is AnimLayer);
+                var layer = (FbxAnimLayer)stack.SrcObjects.FirstOrDefault(x => x is FbxAnimLayer);
 
                 scene.SetCurrentAnimationStack(stack);
                 var eval = scene.GetAnimationEvaluator();
@@ -551,10 +551,10 @@ namespace ChamberLib.FbxSharp
             done[index] = true;
         }
 
-        static Dictionary<SurfaceMaterial, Dictionary<Tuple<ShaderContent, ShaderContent>, MaterialContent>> _materialsCache =
-            new Dictionary<SurfaceMaterial, Dictionary<Tuple<ShaderContent, ShaderContent>, MaterialContent>>();
+        static Dictionary<FbxSurfaceMaterial, Dictionary<Tuple<ShaderContent, ShaderContent>, MaterialContent>> _materialsCache =
+            new Dictionary<FbxSurfaceMaterial, Dictionary<Tuple<ShaderContent, ShaderContent>, MaterialContent>>();
 
-        static MaterialContent GetMaterialFromMaterial(SurfaceMaterial material, ShaderContent vertexShaderStage, ShaderContent fragmentShaderStage, IContentImporter importer, string filename)
+        static MaterialContent GetMaterialFromMaterial(FbxSurfaceMaterial material, ShaderContent vertexShaderStage, ShaderContent fragmentShaderStage, IContentImporter importer, string filename)
         {
             var shaderTuple = new Tuple<ShaderContent, ShaderContent>(vertexShaderStage, fragmentShaderStage);
             if (_materialsCache.ContainsKey(material) && _materialsCache[material].ContainsKey(shaderTuple))
@@ -574,12 +574,12 @@ namespace ChamberLib.FbxSharp
             material2.DiffuseColor = new Vector3(0.5f, 0.5f, 0.5f);
             material2.Name = material.Name;
 
-            Property diffuseProp;
-            Property emissiveProp;
-            Property textureProp;
-            if (material is SurfaceLambert)
+            FbxProperty diffuseProp;
+            FbxProperty emissiveProp;
+            FbxProperty textureProp;
+            if (material is FbxSurfaceLambert)
             {
-                var lambert = material as SurfaceLambert;
+                var lambert = material as FbxSurfaceLambert;
                 diffuseProp = GetMaterialColorProperty(lambert, "Diffuse", lambert.Diffuse);
                 emissiveProp = GetMaterialColorProperty(lambert, "Emissive", lambert.Emissive);
                 textureProp = FindTextureProperty(lambert, "Diffuse", lambert.Diffuse);
@@ -606,9 +606,9 @@ namespace ChamberLib.FbxSharp
                     material2.Texture = tex;
             }
 
-            if (material is SurfacePhong)
+            if (material is FbxSurfacePhong)
             {
-                var phong = material as SurfacePhong;
+                var phong = material as FbxSurfacePhong;
 
                 var specularProp = GetMaterialColorProperty(phong, "Specular", phong.Specular);
                 if (specularProp != null)
@@ -634,9 +634,9 @@ namespace ChamberLib.FbxSharp
                 }
             }
 
-            if (material is SurfaceLambert)
+            if (material is FbxSurfaceLambert)
             {
-                var transparencyFactor = (material as SurfaceLambert).TransparencyFactor;
+                var transparencyFactor = (material as FbxSurfaceLambert).TransparencyFactor;
                 if (transparencyFactor != null)
                 {
                     material2.Alpha = (float)(1 - transparencyFactor.Get());
@@ -648,7 +648,7 @@ namespace ChamberLib.FbxSharp
             return material2;
         }
 
-        static Property GetMaterialColorProperty(SurfaceMaterial material, string name, Property include=null)
+        static FbxProperty GetMaterialColorProperty(FbxSurfaceMaterial material, string name, FbxProperty include=null)
         {
             var name1 = name.ToLower();
             var name2 = name1 + "color";
@@ -656,7 +656,7 @@ namespace ChamberLib.FbxSharp
                 p => p.Name.ToLower() == name1/* ||
                      p.Name.ToLower() == name2*/).ToList();
 
-            var v = new _FbxSharp.Vector3(0, 0, 0);
+            var v = new _FbxSharp.FbxVector3(0, 0, 0);
             if (include != null && !props.Contains(include))
             {
                 props.Add(include);
@@ -664,20 +664,20 @@ namespace ChamberLib.FbxSharp
 
             foreach (var p in props)
             {
-                if (p.PropertyDataType == typeof(_FbxSharp.Vector3))
+                if (p.PropertyDataType == typeof(_FbxSharp.FbxVector3))
                 {
-                    v = (_FbxSharp.Vector3)p.GetValue();
-                    if (v != _FbxSharp.Vector3.Zero)
+                    v = (_FbxSharp.FbxVector3)p.GetValue();
+                    if (v != _FbxSharp.FbxVector3.Zero)
                         return p;
                 }
             }
 
             foreach (var p in props)
             {
-                if (p.PropertyDataType == typeof(_FbxSharp.Color))
+                if (p.PropertyDataType == typeof(_FbxSharp.FbxColor))
                 {
-                    v = p.Get<_FbxSharp.Color>().ToVector3();
-                    if (v != _FbxSharp.Vector3.Zero)
+                    v = p.Get<_FbxSharp.FbxColor>().ToVector3();
+                    if (v != _FbxSharp.FbxVector3.Zero)
                         return p;
                 }
             }
@@ -685,21 +685,21 @@ namespace ChamberLib.FbxSharp
             return null;
         }
 
-        static ChamberLib.Vector3 GetPropertyValue(Property property)
+        static ChamberLib.Vector3 GetPropertyValue(FbxProperty property)
         {
-            if (property.PropertyDataType == typeof(_FbxSharp.Vector3))
+            if (property.PropertyDataType == typeof(_FbxSharp.FbxVector3))
             {
-                return ((_FbxSharp.Vector3)property.GetValue()).ToChamber();
+                return ((_FbxSharp.FbxVector3)property.GetValue()).ToChamber();
             }
-            if (property.PropertyDataType == typeof(_FbxSharp.Color))
+            if (property.PropertyDataType == typeof(_FbxSharp.FbxColor))
             {
-                return property.Get<_FbxSharp.Color>().ToVector3().ToChamber();
+                return property.Get<_FbxSharp.FbxColor>().ToVector3().ToChamber();
             }
 
             throw new InvalidOperationException();
         }
 
-        static Property FindTextureProperty(SurfaceMaterial material, string name, Property include=null)
+        static FbxProperty FindTextureProperty(FbxSurfaceMaterial material, string name, FbxProperty include=null)
         {
             var name1 = name.ToLower();
             var name2 = name1 + "color";
@@ -716,7 +716,7 @@ namespace ChamberLib.FbxSharp
             {
                 foreach (var src in p.SrcObjects)
                 {
-                    if (src is Texture)
+                    if (src is FbxTexture)
                     {
                         return p;
                     }
@@ -726,11 +726,11 @@ namespace ChamberLib.FbxSharp
             return null;
         }
 
-        static TextureContent GetMaterialTexture(Property property, IContentImporter importer, string modelFilename)
+        static TextureContent GetMaterialTexture(FbxProperty property, IContentImporter importer, string modelFilename)
         {
             foreach (var srcobj in property.SrcObjects)
             {
-                var tex = srcobj as Texture;
+                var tex = srcobj as FbxTexture;
                 if (tex != null)
                 {
                     var textureFilename = Path.Combine(Path.GetDirectoryName(modelFilename), tex.Filename);
@@ -742,7 +742,7 @@ namespace ChamberLib.FbxSharp
             return null;
         }
 
-        static BoneContent BoneFromNode(Node node)
+        static BoneContent BoneFromNode(FbxNode node)
         {
             var bone = new BoneContent();
             bone.Name = node.Name;
@@ -771,7 +771,7 @@ namespace ChamberLib.FbxSharp
             Matrix mr;
             switch (order)
             {
-            case Node.ERotationOrder.OrderXYZ:
+            case FbxNode.ERotationOrder.OrderXYZ:
                 mr = mrx * mry * mrz;
                 break;
             default:

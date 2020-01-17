@@ -4,7 +4,7 @@ namespace ChamberLib.FbxSharp
 {
     public static class VectorHelper
     {
-        public static ChamberLib.Vector2 ToChamber(this global::FbxSharp.Vector2 v)
+        public static ChamberLib.Vector2 ToChamber(this global::FbxSharp.FbxVector2 v)
         {
             return
                 new Vector2(
@@ -12,7 +12,7 @@ namespace ChamberLib.FbxSharp
                     (float)v.Y);
         }
 
-        public static ChamberLib.Vector3 ToChamber(this global::FbxSharp.Vector3 v)
+        public static ChamberLib.Vector3 ToChamber(this global::FbxSharp.FbxVector3 v)
         {
             return
                 new Vector3(
@@ -21,7 +21,7 @@ namespace ChamberLib.FbxSharp
                     (float)v.Z);
         }
 
-        public static ChamberLib.Vector4 ToChamber(this global::FbxSharp.Vector4 v)
+        public static ChamberLib.Vector4 ToChamber(this global::FbxSharp.FbxVector4 v)
         {
             return
                 new Vector4(

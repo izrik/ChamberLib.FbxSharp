@@ -4,7 +4,7 @@ namespace ChamberLib.FbxSharp
 {
     public static class MatrixHelper
     {
-        public static ChamberLib.Matrix ToChamber(this global::FbxSharp.Matrix m)
+        public static ChamberLib.Matrix ToChamber(this global::FbxSharp.FbxMatrix m)
         {
             return
                 new Matrix(
