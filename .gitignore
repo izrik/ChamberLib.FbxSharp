@@ -188,3 +188,4 @@ FakesAssemblies/
 # Auto-generated files
 AssemblyInfo.Git.cs
 
+.vs

@@ -12,7 +12,7 @@ addons:
 script:
   - nuget restore ChamberLib.FbxSharp.sln
   - xbuild /p:Configuration=Debug ChamberLib.FbxSharp.sln
-  - nunit-console ./ChamberLib.FbxSharp.Tests/bin/Debug/ChamberLib.FbxSharp.Tests.dll
+  - mono ./packages/NUnit.ConsoleRunner.3.10.0/tools/nunit3-console.exe ./ChamberLib.FbxSharp.Tests/bin/Debug/ChamberLib.FbxSharp.Tests.dll
 
 branches:
   only:
